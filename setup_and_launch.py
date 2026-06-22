@@ -44,16 +44,41 @@ def check_server_running() -> bool:
         return False
 
 
+def ensure_npm() -> str | None:
+    npm = shutil.which("npm")
+    if npm:
+        return npm
+
+    print("[需要处理] 没找到 Node.js/npm。")
+    brew = shutil.which("brew")
+    if brew:
+        if ask_yes("是否现在通过 Homebrew 自动安装 Node.js？"):
+            result = run([brew, "install", "node"], timeout=None)
+            if result.returncode == 0:
+                npm = shutil.which("npm")
+                if npm:
+                    print("[OK] Node.js/npm 安装完成")
+                    return npm
+            print("[失败] Node.js 自动安装失败。可能是网络或 Homebrew 权限问题。")
+        return None
+
+    print("这台电脑也没有 Homebrew，脚本不能静默安装 Node.js。")
+    print("我会打开 Node.js 下载页；装完 Node.js 后，重新双击本脚本。")
+    if ask_yes("是否现在打开 Node.js 下载页？"):
+        webbrowser.open("https://nodejs.org/")
+    return None
+
+
 def ensure_lark_cli() -> bool:
     if setup_lark_auth.find_lark_cli():
         print("[OK] lark-cli 已安装")
         return True
 
     print("[需要处理] 没找到 lark-cli。")
-    npm = shutil.which("npm")
+    npm = ensure_npm()
     if not npm:
-        print("这台电脑也没找到 npm，无法自动安装 lark-cli。")
-        print("先安装 Node.js，或让管理员执行：npm install -g @larksuite/cli")
+        print("没有 npm，暂时无法自动安装 lark-cli。")
+        print("Node.js/npm 装好后，重新双击本脚本即可继续。")
         return False
 
     if not ask_yes("是否现在自动执行 npm install -g @larksuite/cli？"):
