@@ -1,0 +1,7 @@
+config.json
+__pycache__/
+*.pyc
+.DS_Store
+mac_click
+mac_record
+*.log

@@ -1,0 +1,453 @@
+{
+  "console": {
+    "eyebrow": "iOS V2",
+    "title": "大屏版",
+    "subtitle": "大屏宏新版：录制为空，先保存放大窗口位置再录制。",
+    "port": 8878
+  },
+  "profiles": {
+    "main": {
+      "x": 1064,
+      "y": 33,
+      "width": 406,
+      "height": 890
+    },
+    "external": {
+      "x": 2984,
+      "y": 30,
+      "width": 406,
+      "height": 890
+    }
+  },
+  "app_names": [
+    "iPhone Mirroring",
+    "iPhone 镜像",
+    "iPhone鏡像輸出",
+    "iPhoneミラーリング"
+  ],
+  "macros": {
+    "icloud_login_connect": {
+      "delay_seconds": 0.5,
+      "login": {
+        "x_ratio": -0.2089,
+        "y_ratio": 1.1336
+      },
+      "connect": {
+        "x_ratio": -0.0222,
+        "y_ratio": 1.0776
+      }
+    }
+  },
+  "recorded_macros": {
+    "stable:normal_triple": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.897,
+          "x_ratio": 0.9064,
+          "y_ratio": 0.5438
+        },
+        {
+          "delay_seconds": 0.579,
+          "x_ratio": 0.9138,
+          "y_ratio": 0.6989
+        },
+        {
+          "delay_seconds": 0.474,
+          "x_ratio": 0.9187,
+          "y_ratio": 0.7551
+        },
+        {
+          "delay_seconds": 0.675,
+          "x_ratio": 0.2956,
+          "y_ratio": 0.7843
+        }
+      ]
+    },
+    "stable:normal_quad": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.37,
+          "x_ratio": 0.8941,
+          "y_ratio": 0.4966
+        },
+        {
+          "delay_seconds": 0.455,
+          "x_ratio": 0.9015,
+          "y_ratio": 0.5326
+        },
+        {
+          "delay_seconds": 0.749,
+          "x_ratio": 0.9261,
+          "y_ratio": 0.6876
+        },
+        {
+          "delay_seconds": 0.569,
+          "x_ratio": 0.9138,
+          "y_ratio": 0.7573
+        },
+        {
+          "delay_seconds": 0.789,
+          "x_ratio": 0.3374,
+          "y_ratio": 0.7685
+        }
+      ]
+    },
+    "stable:normal_safe": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.817,
+          "x_ratio": 0.9015,
+          "y_ratio": 0.7618
+        },
+        {
+          "delay_seconds": 0.862,
+          "x_ratio": 0.2635,
+          "y_ratio": 0.7798
+        }
+      ]
+    },
+    "stable:raised_triple": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.573,
+          "x_ratio": 0.9039,
+          "y_ratio": 0.5427
+        },
+        {
+          "delay_seconds": 0.485,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.6899
+        },
+        {
+          "delay_seconds": 0.577,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.7674
+        },
+        {
+          "delay_seconds": 0.609,
+          "x_ratio": 0.3103,
+          "y_ratio": 0.7831
+        }
+      ]
+    },
+    "stable:raised_quad": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.282,
+          "x_ratio": 0.9113,
+          "y_ratio": 0.4562
+        },
+        {
+          "delay_seconds": 0.369,
+          "x_ratio": 0.9015,
+          "y_ratio": 0.5034
+        },
+        {
+          "delay_seconds": 0.477,
+          "x_ratio": 0.9163,
+          "y_ratio": 0.6584
+        },
+        {
+          "delay_seconds": 0.452,
+          "x_ratio": 0.9113,
+          "y_ratio": 0.7371
+        },
+        {
+          "delay_seconds": 0.623,
+          "x_ratio": 0.3079,
+          "y_ratio": 0.764
+        }
+      ]
+    },
+    "stable:raised_safe": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.867,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.7618
+        },
+        {
+          "delay_seconds": 0.794,
+          "x_ratio": 0.2931,
+          "y_ratio": 0.7742
+        }
+      ]
+    },
+    "repost:normal_triple": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.423,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.5382
+        },
+        {
+          "delay_seconds": 0.564,
+          "x_ratio": 0.9015,
+          "y_ratio": 0.682
+        },
+        {
+          "delay_seconds": 0.556,
+          "x_ratio": 0.9187,
+          "y_ratio": 0.7596
+        },
+        {
+          "delay_seconds": 0.699,
+          "x_ratio": 0.17,
+          "y_ratio": 0.7865
+        },
+        {
+          "delay_seconds": 0.735,
+          "x_ratio": 0.9458,
+          "y_ratio": 0.7517
+        },
+        {
+          "delay_seconds": 0.66,
+          "x_ratio": 0.2266,
+          "y_ratio": 0.7809
+        }
+      ]
+    },
+    "repost:normal_quad": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.999,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.4978
+        },
+        {
+          "delay_seconds": 0.511,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.5416
+        },
+        {
+          "delay_seconds": 0.615,
+          "x_ratio": 0.9113,
+          "y_ratio": 0.6865
+        },
+        {
+          "delay_seconds": 0.67,
+          "x_ratio": 0.8966,
+          "y_ratio": 0.7663
+        },
+        {
+          "delay_seconds": 0.636,
+          "x_ratio": 0.1527,
+          "y_ratio": 0.7775
+        },
+        {
+          "delay_seconds": 0.778,
+          "x_ratio": 0.9212,
+          "y_ratio": 0.7562
+        },
+        {
+          "delay_seconds": 0.581,
+          "x_ratio": 0.2685,
+          "y_ratio": 0.7787
+        }
+      ]
+    },
+    "repost:raised_triple": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.104,
+          "x_ratio": 0.9113,
+          "y_ratio": 0.5371
+        },
+        {
+          "delay_seconds": 0.59,
+          "x_ratio": 0.9039,
+          "y_ratio": 0.691
+        },
+        {
+          "delay_seconds": 0.578,
+          "x_ratio": 0.9064,
+          "y_ratio": 0.7629
+        },
+        {
+          "delay_seconds": 0.624,
+          "x_ratio": 0.0985,
+          "y_ratio": 0.791
+        },
+        {
+          "delay_seconds": 0.667,
+          "x_ratio": 0.9113,
+          "y_ratio": 0.7539
+        },
+        {
+          "delay_seconds": 0.653,
+          "x_ratio": 0.2463,
+          "y_ratio": 0.7843
+        }
+      ]
+    },
+    "repost:normal_safe": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.029,
+          "x_ratio": 0.9163,
+          "y_ratio": 0.764
+        },
+        {
+          "delay_seconds": 0.621,
+          "x_ratio": 0.2611,
+          "y_ratio": 0.7809
+        }
+      ]
+    },
+    "repost:raised_safe": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.438,
+          "x_ratio": 0.9089,
+          "y_ratio": 0.7573
+        },
+        {
+          "delay_seconds": 0.606,
+          "x_ratio": 0.2882,
+          "y_ratio": 0.7854
+        }
+      ]
+    },
+    "repost:raised_quad": {
+      "profile": "main",
+      "window": {
+        "x": 2984,
+        "y": 30,
+        "width": 406,
+        "height": 890
+      },
+      "actions": [
+        {
+          "delay_seconds": 0.595,
+          "x_ratio": 0.9064,
+          "y_ratio": 0.4618
+        },
+        {
+          "delay_seconds": 0.611,
+          "x_ratio": 0.899,
+          "y_ratio": 0.5404
+        },
+        {
+          "delay_seconds": 0.858,
+          "x_ratio": 0.9064,
+          "y_ratio": 0.6764
+        },
+        {
+          "delay_seconds": 0.486,
+          "x_ratio": 0.9039,
+          "y_ratio": 0.7461
+        },
+        {
+          "delay_seconds": 0.801,
+          "x_ratio": 0.1453,
+          "y_ratio": 0.7742
+        },
+        {
+          "delay_seconds": 0.685,
+          "x_ratio": 0.9286,
+          "y_ratio": 0.7562
+        },
+        {
+          "delay_seconds": 0.636,
+          "x_ratio": 0.3153,
+          "y_ratio": 0.7764
+        }
+      ]
+    }
+  },
+  "last_recorded_macro": "repost:normal_safe",
+  "macro_profile": "stable",
+  "macro_profiles": {
+    "stable": {
+      "label": "日常分享版",
+      "cat": "cat.png"
+    },
+    "repost": {
+      "label": "转发版",
+      "cat": "cat-repost.png"
+    }
+  },
+  "sheet": {
+    "spreadsheet_token": "PASTE_YOUR_SPREADSHEET_TOKEN_HERE",
+    "sheet_id": "PASTE_YOUR_SHEET_ID_HERE",
+    "start_row": 2440,
+    "current_row": 2
+  }
+}

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>iOS V2 大屏版</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="cat-card">
+          <img id="catImage" src="/cat.png" alt="cat" onerror="this.style.display='none'; this.parentElement.classList.add('missing')" />
+        </div>
+        <div>
+          <p class="eyebrow" id="consoleEyebrow">iOS V2</p>
+          <h1 id="consoleTitle">大屏版</h1>
+          <p class="sub" id="consoleSubtitle">录制、复位、播放都在一个柔软的小面板里。</p>
+        </div>
+      </section>
+
+      <section class="status-grid">
+        <article class="status-card primary">
+          <span class="label">录制状态</span>
+          <strong id="recording">加载中...</strong>
+        </article>
+        <article class="status-card">
+          <div class="status-head">
+            <span class="label">普通状态</span>
+            <button id="statusDetailButton" class="detail-button" type="button">详情</button>
+          </div>
+          <strong id="status" class="status-text">加载中...</strong>
+        </article>
+      </section>
+
+      <section class="macro-strip" id="macroStrip"></section>
+      <section class="sheet-row">
+        <span>当前写入行</span>
+        <input id="rowInput" type="number" min="1" value="2440" />
+        <button id="rowButton" type="button">跳到此行</button>
+      </section>
+
+      <section class="panel category-panel">
+        <div class="panel-title">
+          <span>主点击按钮</span>
+          <em>0-6 分类写入</em>
+        </div>
+        <div class="category-grid" id="categoryButtons"></div>
+      </section>
+
+      <section class="panel profile-panel">
+        <div class="panel-title">
+          <span>当前版本</span>
+          <em id="busyPill">空闲</em>
+        </div>
+        <div class="profile-switch">
+          <button data-profile="stable">日常分享版</button>
+          <button data-profile="repost">转发版</button>
+        </div>
+      </section>
+
+      <details class="panel play-panel">
+        <summary>
+          <span>播放宏</span>
+          <em>保留旧 V2 能力</em>
+        </summary>
+        <div class="button-grid three" id="playButtons"></div>
+      </details>
+
+      <details class="panel">
+        <summary>
+          <span>常用操作</span>
+          <em>复位 / 坐标 / 测试</em>
+        </summary>
+        <div class="button-grid two">
+          <button data-action="launch">启动 iPhone 镜像</button>
+          <button data-action="read_coords">读取坐标</button>
+          <button data-action="reset_main">复位到主屏</button>
+          <button data-action="reset_external">复位到外接屏</button>
+          <button data-action="save_main_window">保存为主屏位</button>
+          <button data-action="save_external_window">保存为外接屏位</button>
+          <button data-action="test_login">测试登录 + 连接</button>
+          <button data-action="play_recent">播放最近录制宏</button>
+        </div>
+      </details>
+
+      <details class="panel recorder">
+        <summary>
+          <span>录制宏</span>
+          <em>需要重录时展开</em>
+        </summary>
+        <div class="button-grid three" id="recordButtons"></div>
+        <button class="danger" data-action="stop_recording">结束录制并保存</button>
+      </details>
+
+      <details class="panel">
+        <summary>
+          <span>临时校准</span>
+          <em>测试登录页用</em>
+        </summary>
+        <div class="button-grid two">
+          <button data-action="calibrate_login">校准登录点</button>
+          <button data-action="calibrate_connect">校准连接点</button>
+        </div>
+      </details>
+    </main>
+    <div id="statusModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+      <div class="modal-card">
+        <div class="modal-title">
+          <span id="statusModalTitle">状态详情</span>
+          <button id="statusModalClose" class="detail-button" type="button">关闭</button>
+        </div>
+        <pre id="statusDetail">加载中...</pre>
+      </div>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>
