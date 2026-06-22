@@ -5,19 +5,19 @@ Mac + iPhone Mirroring 版审核控制台，适合大屏/外接屏窗口坐标�
 ## 第一次使用
 
 1. 把仓库拉到本机，例如放到 `~/Desktop/tiktok-ios-v2-large-console`。
-2. 复制配置模板：
+2. 双击 `一键准备并启动.command`。
+3. 如果是第一次运行，脚本会让你粘贴飞书表格链接或 `spreadsheet_token`。
+4. 如果链接里没有识别到 `sheet_id`，脚本会继续让你手动粘贴 `sheet_id`。
+5. 输入起始写入行号；直接回车默认从第 2 行开始。
 
-   ```bash
-   cp config.example.json config.json
-   ```
+脚本会在本机生成 `config.json`，然后继续检查鼠标宏组件、`lark-cli`、飞书授权和辅助功能权限；都通过后会启动 Web 审核台。
 
-3. 打开 `config.json`，填写自己的飞书表格配置：
-   - `sheet.spreadsheet_token`
-   - `sheet.sheet_id`
-   - `sheet.current_row`
-4. 双击 `一键准备并启动.command`。
+## 飞书绑定说明
 
-一键脚本会检查鼠标宏组件、`lark-cli`、飞书授权和辅助功能权限；都通过后会启动 Web 审核台。
+- `config.json` 决定写入哪张飞书表、哪个工作表、从哪一行开始写。
+- 飞书授权决定用当前电脑上的哪个飞书账号去写表。
+- 如果多人一起用同一张表，要提前分好行号范围，避免两个人写到同一行。
+- 如果每个人写自己的表，就让每个人粘贴自己的飞书表链接。
 
 ## 常用入口
 
@@ -28,4 +28,4 @@ Mac + iPhone Mirroring 版审核控制台，适合大屏/外接屏窗口坐标�
 
 ## 不要提交
 
-`config.json` 是本机配置，里面会有飞书表信息，不要提交到 GitLab。
+`config.json` 是本机配置，里面会有飞书表信息，不要提交到 GitHub。

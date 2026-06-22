@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
 import webbrowser
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 
 ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
+EXAMPLE_CONFIG_PATH = ROOT / "config.example.json"
+PLACEHOLDER_PREFIX = "PASTE_YOUR_"
+TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9]{8,}$")
 
 
 def run(command: list[str], timeout: int | None = 30) -> subprocess.CompletedProcess[str]:
@@ -28,14 +33,76 @@ def find_lark_cli() -> str | None:
     return None
 
 
-def load_sheet_config() -> tuple[str, str]:
-    config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    sheet = config.get("sheet", {})
-    token = sheet.get("spreadsheet_token")
-    sheet_id = sheet.get("sheet_id")
-    if not token or not sheet_id:
+def is_missing(value: object) -> bool:
+    return not isinstance(value, str) or not value or value.startswith(PLACEHOLDER_PREFIX)
+
+
+def parse_sheet_reference(text: str) -> tuple[str, str]:
+    text = text.strip()
+    token = ""
+    sheet_id = ""
+
+    if text.startswith(("http://", "https://")):
+        parsed = urlparse(text)
+        parts = [part for part in parsed.path.split("/") if part]
+        if "sheets" in parts:
+            index = parts.index("sheets")
+            if index + 1 < len(parts):
+                token = parts[index + 1]
+        query = parse_qs(parsed.query)
+        sheet_id = (query.get("sheet") or query.get("sheet_id") or [""])[0]
+    elif TOKEN_PATTERN.fullmatch(text):
+        token = text
+
+    return token.strip(), sheet_id.strip()
+
+
+def load_or_create_config() -> dict:
+    if CONFIG_PATH.exists():
+        return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    if EXAMPLE_CONFIG_PATH.exists():
+        config = json.loads(EXAMPLE_CONFIG_PATH.read_text(encoding="utf-8"))
+    else:
+        config = {}
+    print("[首次配置] 这台电脑还没有 config.json。")
+    print("请粘贴要写入的飞书表格链接；如果识别不到 sheet_id，脚本会继续问。")
+    return config
+
+
+def ensure_sheet_config() -> tuple[str, str]:
+    config = load_or_create_config()
+    sheet = config.setdefault("sheet", {})
+    token = sheet.get("spreadsheet_token", "")
+    sheet_id = sheet.get("sheet_id", "")
+
+    if is_missing(token) or is_missing(sheet_id):
+        reference = input("飞书表格链接或 spreadsheet_token：").strip()
+        parsed_token, parsed_sheet_id = parse_sheet_reference(reference)
+        token = parsed_token or (reference if TOKEN_PATTERN.fullmatch(reference) else "")
+        sheet_id = parsed_sheet_id or sheet_id
+
+        if is_missing(token):
+            token = input("spreadsheet_token：").strip()
+        if is_missing(sheet_id):
+            sheet_id = input("sheet_id：").strip()
+
+        row_text = input("起始写入行号，直接回车默认 2：").strip()
+        current_row = int(row_text) if row_text else int(sheet.get("current_row") or 2)
+
+        sheet["spreadsheet_token"] = token
+        sheet["sheet_id"] = sheet_id
+        sheet["start_row"] = int(sheet.get("start_row") or current_row)
+        sheet["current_row"] = current_row
+        CONFIG_PATH.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print("[OK] 已生成本机 config.json。这个文件不会提交到 GitHub。")
+
+    if is_missing(token) or is_missing(sheet_id):
         raise RuntimeError("config.json 缺少 sheet.spreadsheet_token 或 sheet.sheet_id")
-    return token, sheet_id
+    return str(token), str(sheet_id)
+
+
+def load_sheet_config() -> tuple[str, str]:
+    return ensure_sheet_config()
 
 
 def test_sheet_access(cli: str) -> tuple[bool, str]:
