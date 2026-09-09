@@ -88,6 +88,18 @@ FALLBACK_DOMAINS: dict[str, dict] = {
             {"key": "4", "label": "不违规", "policy": "", "violation": False, "macro": "safe"},
         ],
     },
+    "edf": {
+        "label": "EDF",
+        "categories": [
+            {"key": "1", "label": "Disordered Eating", "policy": "Disordered Eating", "violation": True, "macro": "quad", "color": "blue"},
+            {"key": "2", "label": "Highly Harmful", "policy": "Disordered Eating - Highly Harmful", "violation": True, "macro": "quad", "color": "pink"},
+            {"key": "3", "label": "General WL/MG · MFT", "policy": "General Weight Loss & Muscle Gain Products & Services - Marketing, Facilitation & Trade", "violation": True, "macro": "quad", "color": "orange"},
+            {"key": "4", "label": "High Risk WL/MG · MFT", "policy": "High Risk Weight Loss & Muscle Gain Products & Services - Marketing, Facilitation & Trade", "violation": True, "macro": "quad", "color": "pink"},
+            {"key": "5", "label": "High Risk WL/MG · DDP", "policy": "High Risk Weight Loss & Muscle Gain Products, Services & Behaviors - Depiction, Description & Promotion", "violation": True, "macro": "quad", "color": "orange"},
+            {"key": "6", "label": "Invasive Cosmetic", "policy": "Invasive Cosmetic Procedures", "violation": True, "macro": "quad", "color": "blue"},
+            {"key": "7", "label": "不违规", "policy": "", "violation": False, "macro": "safe", "color": "green"},
+        ],
+    },
 }
 
 

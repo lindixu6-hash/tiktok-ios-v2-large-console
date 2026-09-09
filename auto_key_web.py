@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-自动按键 Web 控制台 —— 模拟按键盘"1"或"2"键
-- Web UI：选择按键（1/2）+ 开始/暂停/停止 + 间隔可调 + 实时计数
+自动按键 Web 控制台 —— 模拟按键盘 1-9 键
+- Web UI：选择按键（1-9）+ 开始/暂停/停止 + 间隔可调 + 实时计数
 - 默认端口：8866
 """
 import json
@@ -31,6 +31,13 @@ except Exception:
 KEY_CODES = {
     "1": 18,
     "2": 19,
+    "3": 20,
+    "4": 21,
+    "5": 23,
+    "6": 22,
+    "7": 26,
+    "8": 28,
+    "9": 25,
 }
 
 
@@ -278,8 +285,8 @@ HTML_PAGE = r"""<!doctype html>
   .card-title{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:10px;
     text-transform:uppercase;letter-spacing:.5px}
 
-  .keys{display:flex;gap:8px}
-  .key-btn{flex:1;padding:12px 0;border-radius:10px;border:2px solid var(--border);
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .key-btn{min-width:0;padding:12px 0;border-radius:10px;border:2px solid var(--border);
     background:var(--raised);color:var(--text2);font-size:20px;font-weight:800;
     cursor:pointer;transition:all .12s;font-family:inherit}
   .key-btn:hover{border-color:var(--accent);color:var(--text)}
@@ -336,8 +343,15 @@ HTML_PAGE = r"""<!doctype html>
   <div class="card">
     <div class="card-title">按键</div>
     <div class="keys">
-      <button class="key-btn" data-key="1">1<span class="key-sub">L1 违规</span></button>
-      <button class="key-btn active" data-key="2">2<span class="key-sub">L2 违规</span></button>
+      <button class="key-btn" data-key="1">1<span class="key-sub">按键</span></button>
+      <button class="key-btn active" data-key="2">2<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="3">3<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="4">4<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="5">5<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="6">6<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="7">7<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="8">8<span class="key-sub">按键</span></button>
+      <button class="key-btn" data-key="9">9<span class="key-sub">按键</span></button>
     </div>
   </div>
 
@@ -398,8 +412,6 @@ async function api(path,method='GET',body){
   if(body){opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(body)}
   const r=await fetch(path,opt);return await r.json();
 }
-function keyLabel(k){return k==='1'?'L1 违规':'L2 违规'}
-
 async function render(){
   const s=await api('/api/status');
   $('sCount').textContent=s.session_count.toLocaleString();
@@ -408,7 +420,6 @@ async function render(){
   $('interval').value=s.interval;
   curKey=s.current_key;
   document.querySelectorAll('.key-btn').forEach(b=>b.classList.toggle('active',b.dataset.key===curKey));
-  const label=keyLabel(curKey);
   $('pressBtn').textContent=`👆 手动按一次 ${curKey}`;
   if(!s.running){
     pill.className='pill idle';pill.textContent='空闲';
@@ -456,6 +467,11 @@ document.querySelectorAll('.key-btn').forEach(b=>b.onclick=async()=>{
   toast(r.message);render();
 });
 document.addEventListener('keydown',e=>{
+  if(/^[1-9]$/.test(e.key)&&e.target.tagName!=='INPUT'){
+    e.preventDefault();
+    const b=document.querySelector(`.key-btn[data-key="${e.key}"]`);
+    if(b)b.click();
+  }
   if(e.code==='Space'&&e.target.tagName!=='INPUT'){e.preventDefault();$('pauseBtn').click()}
 });
 render();setInterval(render,1000);
@@ -471,7 +487,7 @@ MINI_PAGE = r"""<!DOCTYPE html>
   <title>AutoKey</title>
   <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
-  html, body { width:280px; height:220px; overflow:hidden; }
+  html, body { width:300px; height:250px; overflow:hidden; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
     background: rgba(255,250,248,0.95);
@@ -497,7 +513,7 @@ MINI_PAGE = r"""<!DOCTYPE html>
   }
   #openMainBtn:hover { background:rgba(0,0,0,0.06); color:#666; }
   #buttonArea {
-    flex:1; display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:5px;
+    flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:4px; padding:5px;
   }
   .mini-btn {
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
@@ -545,6 +561,13 @@ MINI_PAGE = r"""<!DOCTYPE html>
     <div id="buttonArea">
       <button class="mini-btn cat-key" data-key="1" id="btn1"><span class="key">1</span><span class="label">按键</span></button>
       <button class="mini-btn cat-key" data-key="2" id="btn2"><span class="key">2</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="3" id="btn3"><span class="key">3</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="4" id="btn4"><span class="key">4</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="5" id="btn5"><span class="key">5</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="6" id="btn6"><span class="key">6</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="7" id="btn7"><span class="key">7</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="8" id="btn8"><span class="key">8</span><span class="label">按键</span></button>
+      <button class="mini-btn cat-key" data-key="9" id="btn9"><span class="key">9</span><span class="label">按键</span></button>
     </div>
     <div id="ctrlBar">
       <button class="ctrl-btn on" id="startBtn">▶ 开始</button>
@@ -595,6 +618,11 @@ $('startBtn').onclick=async()=>{ const r=await api('/api/start','POST'); toast(r
 $('pauseBtn').onclick=async()=>{ const r=await api('/api/pause','POST'); toast(r.message); render(); };
 $('stopBtn').onclick=async()=>{ const r=await api('/api/stop','POST'); toast(r.message); render(); };
 document.addEventListener('keydown',e=>{
+  if(/^[1-9]$/.test(e.key)){
+    e.preventDefault();
+    const b=document.querySelector(`.mini-btn[data-key="${e.key}"]`);
+    if(b)b.click();
+  }
   if(e.code==='Space'){e.preventDefault(); $('pauseBtn').click();}
 });
 render();

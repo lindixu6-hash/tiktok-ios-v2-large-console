@@ -454,12 +454,62 @@
     "repost": {
       "label": "转发版",
       "cat": "cat-repost.png"
+    },
+    "t": {
+      "label": "T包",
+      "cat": "cat.png"
+    },
+    "m": {
+      "label": "M包",
+      "cat": "cat.png"
+    }
+  },
+  "page_mode": "feed",
+  "current_domain": "ssh",
+  "domains": {
+    "minor": {
+      "label": "Minor",
+      "categories": [
+        {"key": "1", "label": "L1违规", "policy": "L1", "violation": true, "macro": "quad", "color": "pink"},
+        {"key": "2", "label": "L2违规", "policy": "L2", "violation": true, "macro": "quad", "color": "orange"},
+        {"key": "3", "label": "不违规", "policy": "", "violation": false, "macro": "safe", "color": "green"}
+      ]
+    },
+    "ansa": {
+      "label": "ANSA",
+      "categories": [
+        {"key": "1", "label": "违规", "policy": "", "violation": true, "macro": "quad", "color": "pink"},
+        {"key": "2", "label": "不违规", "policy": "", "violation": false, "macro": "safe", "color": "green"}
+      ]
+    },
+    "ssh": {
+      "label": "SSH",
+      "categories": [
+        {"key": "1", "label": "Credible Threat", "policy": "Credible Threat of Suicide", "violation": true, "macro": "quad", "color": "blue"},
+        {"key": "2", "label": "Suicide&NSSI", "policy": "Suicide&NSSI", "violation": true, "macro": "quad", "color": "orange"},
+        {"key": "3", "label": "NSSI-severe", "policy": "Suicide&NSSI-severe", "violation": true, "macro": "quad", "color": "pink"},
+        {"key": "4", "label": "不违规", "policy": "", "violation": false, "macro": "safe", "color": "green"}
+      ]
+    },
+    "edf": {
+      "label": "EDF",
+      "categories": [
+        {"key": "1", "label": "Disordered Eating", "policy": "Disordered Eating", "violation": true, "macro": "quad", "color": "blue"},
+        {"key": "2", "label": "Highly Harmful", "policy": "Disordered Eating - Highly Harmful", "violation": true, "macro": "quad", "color": "pink"},
+        {"key": "3", "label": "General WL/MG · MFT", "policy": "General Weight Loss & Muscle Gain Products & Services - Marketing, Facilitation & Trade", "violation": true, "macro": "quad", "color": "orange"},
+        {"key": "4", "label": "High Risk WL/MG · MFT", "policy": "High Risk Weight Loss & Muscle Gain Products & Services - Marketing, Facilitation & Trade", "violation": true, "macro": "quad", "color": "pink"},
+        {"key": "5", "label": "High Risk WL/MG · DDP", "policy": "High Risk Weight Loss & Muscle Gain Products, Services & Behaviors - Depiction, Description & Promotion", "violation": true, "macro": "quad", "color": "orange"},
+        {"key": "6", "label": "Invasive Cosmetic", "policy": "Invasive Cosmetic Procedures", "violation": true, "macro": "quad", "color": "blue"},
+        {"key": "7", "label": "不违规", "policy": "", "violation": false, "macro": "safe", "color": "green"}
+      ]
     }
   },
   "sheet": {
     "spreadsheet_token": "PASTE_YOUR_SPREADSHEET_TOKEN_HERE",
     "sheet_id": "PASTE_YOUR_SHEET_ID_HERE",
     "start_row": 2440,
-    "current_row": 2
+    "current_row": 2,
+    "has_policy_column": true,
+    "binary_mode": false
   }
 }

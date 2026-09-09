@@ -8,6 +8,13 @@
   let busy = false;
   let categories = [];
   let currentDomain = "";
+  const colorMap = {
+    blue: "blue",
+    orange: "orange",
+    pink: "pink",
+    red: "pink",
+    green: "green",
+  };
 
   function shortLabel(label) {
     if (label.length <= 7) return label;
@@ -19,12 +26,12 @@
 
   function buildButtons() {
     buttonArea.innerHTML = "";
-    const n = Math.max(categories.length, 1);
+    const n = Math.min(Math.max(categories.length, 1), 4);
     buttonArea.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
     buttonArea.classList.toggle("binary", categories.length === 2);
     categories.forEach((cat) => {
       const btn = document.createElement("button");
-      btn.className = "mini-btn mc-" + (cat.color || "blue");
+      btn.className = "mini-btn mc-" + (colorMap[cat.color] || "blue");
       btn.dataset.action = "category:" + cat.key;
       btn.dataset.key = String(cat.key);
       btn.title = cat.policy ? `${cat.label}：${cat.policy}` : cat.label;

@@ -2,9 +2,9 @@
 """
 Global hotkey daemon for TikTok console.
 Uses Quartz CGEventTap for reliable global key capture (no pynput dependency).
-Listens for 1/2/3/4 keys globally and forwards to Flask backend.
+Listens for 1-7 keys globally and forwards to the HTTP backend.
 When a browser is frontmost, skips (lets the web page handle it natively).
-1=Credible Threat of Suicide, 2=Suicide&NSSI, 3=Suicide&NSSI-severe, 4=不违规
+The active domain controls what each key means.
 """
 import json
 import sys
@@ -58,10 +58,16 @@ KEY_CODE_TO_CATEGORY = {
     19: "2",
     20: "3",
     21: "4",
+    23: "5",
+    22: "6",
+    26: "7",
     83: "1",
     84: "2",
     85: "3",
     86: "4",
+    87: "5",
+    88: "6",
+    89: "7",
 }
 
 _daemon_running = True
@@ -157,7 +163,7 @@ def main():
     global _ping_thread
 
     print("[hotkey] daemon starting (Quartz CGEventTap)...", flush=True)
-    print("[hotkey] listening for keys: 1,2,3,4 (keycodes 18,19,20,21 / 83,84,85,86)", flush=True)
+    print("[hotkey] listening for keys: 1-7 (number row and numpad)", flush=True)
     print(f"[hotkey] will skip when browser is frontmost", flush=True)
 
     signal.signal(signal.SIGTERM, signal_handler)

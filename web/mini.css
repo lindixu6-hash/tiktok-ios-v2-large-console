@@ -14,7 +14,7 @@ html, body {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-  background: rgba(255, 250, 248, 0.95);
+  background: #f6f7f8;
 }
 
 #miniWindow {
@@ -31,8 +31,8 @@ body {
   align-items: center;
   padding: 0 8px;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.7);
-  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+  background: #ffffff;
+  border-bottom: 1px solid #e6e8eb;
   cursor: default;
 }
 
@@ -44,9 +44,9 @@ body {
 }
 
 .dot.idle { background: #b0b0b0; }
-.dot.working { background: #f5a623; animation: pulse 0.8s infinite; }
-.dot.success { background: #4caf50; }
-.dot.error { background: #e53935; }
+.dot.working { background: #b7791f; animation: pulse 0.8s infinite; }
+.dot.success { background: #4f7a5c; }
+.dot.error { background: #c15c79; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -79,7 +79,7 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr;
+  grid-auto-rows: minmax(0, 1fr);
   gap: 4px;
   padding: 5px;
 }
@@ -89,34 +89,28 @@ body {
 }
 
 .mc-blue {
-  background: linear-gradient(180deg, #f2f6fe, #c7d6fc);
-  color: #3a5bbf;
+  background: #e7edf9;
+  color: #415fae;
 }
-.mc-blue .key { color: #3a5bbf; }
+.mc-blue .key { color: #415fae; }
 
 .mc-orange {
-  background: linear-gradient(180deg, #fff6e7, #fed9a6);
-  color: #ad7112;
+  background: #f7ead2;
+  color: #946217;
 }
-.mc-orange .key { color: #ad7112; }
+.mc-orange .key { color: #946217; }
 
 .mc-pink {
-  background: linear-gradient(180deg, #fef0f3, #fdd6dc);
-  color: #cf5570;
+  background: #f4e3e8;
+  color: #a94c67;
 }
-.mc-pink .key { color: #cf5570; }
+.mc-pink .key { color: #a94c67; }
 
 .mc-green {
-  background: linear-gradient(180deg, #eef6f0, #d4ecd8);
-  color: #4a7c59;
+  background: #e2eee5;
+  color: #41684d;
 }
-.mc-green .key { color: #4a7c59; }
-
-.mc-red {
-  background: linear-gradient(180deg, #fff0ee, #fdd0c8);
-  color: #c44e28;
-}
-.mc-red .key { color: #c44e28; }
+.mc-green .key { color: #41684d; }
 
 .mini-btn {
   display: flex;
@@ -130,7 +124,7 @@ body {
   font-family: inherit;
   padding: 3px 2px;
   transition: transform 0.08s ease, filter 0.08s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), inset 0 0 0 0.5px rgba(255,255,255,0.7);
+  box-shadow: none;
 }
 
 .mini-btn:active {

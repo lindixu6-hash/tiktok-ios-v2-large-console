@@ -13,6 +13,14 @@ const recordSearchKeys = ["raised_triple", "raised_quad", "raised_safe"];
 let categories = [];
 let currentDomain = "";
 
+const categoryColorMap = {
+  blue: "blue",
+  orange: "orange",
+  pink: "pink",
+  red: "pink",
+  green: "green",
+};
+
 const el = {
   recording: document.querySelector("#recording"),
   status: document.querySelector("#status"),
@@ -201,12 +209,13 @@ function buildMacroButtons() {
 /* ─── Build Category Buttons (domain-driven) ─── */
 function buildCategoryButtons() {
   el.categoryButtons.innerHTML = "";
-  el.categoryButtons.style.gridTemplateColumns = `repeat(${Math.max(categories.length, 1)}, 1fr)`;
+  el.categoryButtons.style.gridTemplateColumns = `repeat(${Math.min(Math.max(categories.length, 1), 4)}, 1fr)`;
   categories.forEach((cat) => {
     const id = String(cat.key);
     const label = cat.label;
+    const color = categoryColorMap[cat.color] || "blue";
     const button = document.createElement("button");
-    button.className = `category-button cc-${cat.color || "blue"}`;
+    button.className = `category-button cc-${color}`;
     button.dataset.key = id;
     button.dataset.action = `category:${id}`;
     button.setAttribute("aria-label", `${id} ${label}`);
@@ -360,7 +369,7 @@ async function refreshStatus() {
       el.globalKeyBadge.classList.remove("on", "off");
       if (gk.running) {
         el.globalKeyBadge.classList.add("on");
-        el.globalKeyBadge.title = "全局快捷键已启用：1/2/3/4 任意窗口可用";
+        el.globalKeyBadge.title = "全局快捷键已启用：1-7 任意窗口可用";
       } else {
         el.globalKeyBadge.classList.add("off");
         el.globalKeyBadge.title = "全局快捷键未运行，仅浏览器焦点时可用";
