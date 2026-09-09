@@ -465,6 +465,7 @@
     }
   },
   "page_mode": "feed",
+  "search_term": "",
   "current_domain": "ssh",
   "domains": {
     "minor": {

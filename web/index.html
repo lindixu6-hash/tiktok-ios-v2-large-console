@@ -59,7 +59,7 @@
 
       <section class="mode-bar">
         <div class="mode-group">
-          <span class="mode-label">页面</span>
+          <span class="mode-label">写入模式</span>
           <div class="segmented" role="tablist">
             <button class="seg-btn active" data-page-mode="feed" role="tab" aria-selected="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
@@ -78,6 +78,12 @@
             <button class="seg-btn active" data-profile="m">M包</button>
           </div>
         </div>
+      </section>
+
+      <section id="searchTermBar" class="search-term-bar hidden">
+        <label class="mode-label" for="searchTermInput">搜索词</label>
+        <input id="searchTermInput" class="search-term-input" type="text" placeholder="输入后写入 C 列" autocomplete="off" />
+        <button id="searchTermButton" class="btn-sm primary" type="button">保存</button>
       </section>
 
       <section class="category-section">
@@ -115,10 +121,6 @@
           <div class="record-group">
             <div class="record-group-title">📱 Feed 流</div>
             <div class="record-grid" id="recordFeedGrid"></div>
-          </div>
-          <div class="record-group">
-            <div class="record-group-title">🔍 搜索页</div>
-            <div class="record-grid" id="recordSearchGrid"></div>
           </div>
           <button class="btn-danger" data-action="stop_recording">结束录制</button>
         </div>

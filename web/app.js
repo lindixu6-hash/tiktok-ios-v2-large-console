@@ -2,14 +2,9 @@ const macroLabels = {
   normal_triple: "违规三连",
   normal_quad: "违规四连",
   normal_safe: "不违规",
-  raised_triple: "违规三连",
-  raised_quad: "违规四连",
-  raised_safe: "不违规",
 };
 
 const recordFeedKeys = ["normal_triple", "normal_quad", "normal_safe"];
-const recordSearchKeys = ["raised_triple", "raised_quad", "raised_safe"];
-
 let categories = [];
 let currentDomain = "";
 
@@ -32,7 +27,9 @@ const el = {
   busyPill: document.querySelector("#busyPill"),
   categoryButtons: document.querySelector("#categoryButtons"),
   recordFeedGrid: document.querySelector("#recordFeedGrid"),
-  recordSearchGrid: document.querySelector("#recordSearchGrid"),
+  searchTermBar: document.querySelector("#searchTermBar"),
+  searchTermInput: document.querySelector("#searchTermInput"),
+  searchTermButton: document.querySelector("#searchTermButton"),
   rowInput: document.querySelector("#rowInput"),
   rowButton: document.querySelector("#rowButton"),
   permBanner: document.querySelector("#permBanner"),
@@ -199,10 +196,6 @@ function buildMacroButtons() {
     const label = macroLabels[key];
     el.recordFeedGrid.appendChild(makeButton(label, `record:${key}`));
   });
-  recordSearchKeys.forEach((key) => {
-    const label = macroLabels[key];
-    el.recordSearchGrid.appendChild(makeButton(label, `record:${key}`));
-  });
 }
 
 /* ─── Build Category Buttons (domain-driven) ─── */
@@ -342,6 +335,12 @@ async function refreshStatus() {
         ? `${pageLabels[data.page_mode]} 模式`
         : data.page_mode;
     }
+    if (el.searchTermBar) {
+      el.searchTermBar.classList.toggle("hidden", data.page_mode !== "search");
+    }
+    if (el.searchTermInput && document.activeElement !== el.searchTermInput) {
+      el.searchTermInput.value = data.search_term || "";
+    }
     document.querySelectorAll("[data-page-mode]").forEach((button) => {
       const isActive = button.dataset.pageMode === data.page_mode;
       button.classList.toggle("active", isActive);
@@ -405,7 +404,29 @@ document.querySelectorAll("[data-page-mode]").forEach((button) => {
   button.addEventListener("click", async () => {
     sfx.click();
     await runAction(`page_mode:${button.dataset.pageMode}`);
+    if (button.dataset.pageMode === "search") {
+      el.searchTermInput?.focus();
+    }
   });
+});
+
+async function saveSearchTerm() {
+  const term = el.searchTermInput?.value.trim() || "";
+  if (!term) {
+    showToast("请先输入搜索词");
+    el.searchTermInput?.focus();
+    return;
+  }
+  await runAction(`search_term:${term}`);
+  showToast(`搜索词：${term}`);
+}
+
+el.searchTermButton?.addEventListener("click", saveSearchTerm);
+el.searchTermInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    saveSearchTerm();
+  }
 });
 
 document.querySelectorAll("[data-domain]").forEach((button) => {

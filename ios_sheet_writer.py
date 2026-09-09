@@ -180,10 +180,18 @@ class IOSSheetWriter:
         self._save_current_row()
         return f"飞书写入成功：第 {written_row} 行"
 
-    def write_category_review(self, link: str, category_id: str, search_term: str = "") -> str:
+    def write_category_review(
+        self,
+        link: str,
+        category_id: str,
+        search_term: str = "",
+        behavior: str = BEHAVIOR_FEED,
+    ) -> str:
         link = extract_first_url(link) if link else ""
         if not URL_PATTERN.fullmatch(link):
             raise ValueError(f"剪贴板没有有效 TikTok 链接：{link[:80]}")
+        if behavior not in (BEHAVIOR_FEED, BEHAVIOR_SEARCH):
+            raise ValueError(f"未知行为模式：{behavior}")
 
         config = load_config()
         cat = category_for_key(config, category_id)
@@ -201,7 +209,7 @@ class IOSSheetWriter:
 
         self._write_row(
             link=link,
-            behavior=BEHAVIOR_FEED,
+            behavior=behavior,
             search_term=search_term,
             is_violation=is_violation,
             interactions=interactions,

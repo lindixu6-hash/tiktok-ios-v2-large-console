@@ -35,6 +35,8 @@ from ios_sheet_writer import (
     domains_config,
     current_domain_key,
     category_for_key,
+    BEHAVIOR_FEED,
+    BEHAVIOR_SEARCH,
 )
 
 _LARK_CLI_CANDIDATES = [
@@ -96,6 +98,7 @@ class ConsoleState:
                 "profiles": config.get("macro_profiles", {}),
                 "page_mode": page,
                 "page_modes": {k: v["label"] for k, v in PAGE_MODES.items()},
+                "search_term": current_search_term(config),
                 "current_domain": dom_key,
                 "domains": {
                     k: {"label": v.get("label", k), "categories": v.get("categories", [])}
@@ -263,15 +266,12 @@ def macro_summary() -> list[dict]:
     config = load_config()
     recorded = config.get("recorded_macros", {})
     profile = current_profile_key(config)
-    page = current_page_mode(config)
     result = []
     all_keys = [
-        ("normal_quad", "Feed·违规四连", "违规四连", "feed"),
-        ("normal_safe", "Feed·不违规", "不违规", "feed"),
-        ("raised_quad", "搜索·违规四连", "违规四连", "search"),
-        ("raised_safe", "搜索·不违规", "不违规", "search"),
+        ("normal_quad", "违规四连", "违规四连"),
+        ("normal_safe", "不违规", "不违规"),
     ]
-    for key, label, short_label, macro_page in all_keys:
+    for key, label, short_label in all_keys:
         storage_key = profile_macro_key(profile, key)
         actions = recorded.get(storage_key, {}).get("actions", [])
         result.append(
@@ -281,16 +281,16 @@ def macro_summary() -> list[dict]:
                 "short_label": short_label,
                 "recorded": bool(actions),
                 "count": len(actions),
-                "active": page == macro_page,
-                "page": macro_page,
+                "active": True,
+                "page": "shared",
             }
         )
     return result
 
 
 PAGE_MODES = {
-    "feed": {"label": "Feed流", "macro_prefix": "normal"},
-    "search": {"label": "搜索页", "macro_prefix": "raised"},
+    "feed": {"label": "Feed"},
+    "search": {"label": "搜索"},
 }
 
 
@@ -309,6 +309,19 @@ def set_page_mode(mode: str) -> tuple[bool, str]:
     label = PAGE_MODES[mode]["label"]
     STATE.set(status=f"已切换到：{label}模式", page_mode=mode)
     return True, f"已切换到：{label}模式"
+
+
+def current_search_term(config: dict | None = None) -> str:
+    config = config or load_config()
+    return str(config.get("search_term", "")).strip()
+
+
+def set_search_term(term: str) -> tuple[bool, str]:
+    term = term.strip()
+    config = load_config()
+    config["search_term"] = term
+    _atomic_save_config(config)
+    return True, f"搜索词已设置：{term}" if term else "搜索词已清空"
 
 
 def is_binary_mode(config: dict | None = None) -> bool:
@@ -806,20 +819,17 @@ def play_and_write(storage_key: str, label: str) -> str:
 def select_category_macro(category_id: str) -> str:
     config = load_config()
     profile = current_profile_key(config)
-    recorded = config.get("recorded_macros", {})
-    page = current_page_mode(config)
     suffix = page_mode_macro_suffix(category_id)
-    primary = f"{PAGE_MODES[page]['macro_prefix']}_{suffix}"
-    fallback_prefix = "raised" if page == "feed" else "normal"
-    fallback = f"{fallback_prefix}_{suffix}"
-    for macro_key in (primary, fallback):
-        storage_key = profile_macro_key(profile, macro_key)
-        if recorded.get(storage_key, {}).get("actions"):
-            return storage_key
-    return profile_macro_key(profile, primary)
+    return profile_macro_key(profile, f"normal_{suffix}")
 
 
 def play_category_and_write(category_id: str) -> str:
+    config = load_config()
+    mode = current_page_mode(config)
+    search_term = current_search_term(config) if mode == "search" else ""
+    if mode == "search" and not search_term:
+        return "ERROR:搜索模式必须先填写搜索词"
+    behavior = BEHAVIOR_SEARCH if mode == "search" else BEHAVIOR_FEED
     previous_link = read_clipboard_link()
     storage_key = select_category_macro(category_id)
     suffix = category_macro_suffix(category_id)
@@ -827,7 +837,12 @@ def play_category_and_write(category_id: str) -> str:
     return _run_reliable_pipeline(
         storage_key,
         previous_link,
-        lambda writer, link: writer.write_category_review(link, category_id),
+        lambda writer, link: writer.write_category_review(
+            link,
+            category_id,
+            search_term=search_term,
+            behavior=behavior,
+        ),
         use_fast_macro=use_fast,
         retry_timeout=8.0,
         allow_empty_link=False,
@@ -919,6 +934,9 @@ def handle_action(action: str) -> tuple[bool, str]:
 
     if action.startswith("page_mode:"):
         return set_page_mode(action.split(":", 1)[1])
+
+    if action.startswith("search_term:"):
+        return set_search_term(action.split(":", 1)[1])
 
     if action == "stop_recording":
         result = stop_recording()
