@@ -7,6 +7,9 @@ const macroLabels = {
 const recordFeedKeys = ["normal_triple", "normal_quad", "normal_safe"];
 let categories = [];
 let currentDomain = "";
+let currentPageMode = "feed";
+let savedSearchTerm = "";
+let searchTermDirty = false;
 
 const categoryColorMap = {
   blue: "blue",
@@ -226,8 +229,7 @@ function buildCategoryButtons() {
     });
 
     button.addEventListener("click", () => {
-      sfx.click();
-      runAction(button.dataset.action);
+      runCategoryAction(button);
     });
 
     el.categoryButtons.appendChild(button);
@@ -267,9 +269,11 @@ async function runAction(action) {
       sfx.confirm();
     }
     await refreshStatus();
+    return data;
   } catch (error) {
     el.status.textContent = `请求失败：${error}`;
     sfx.error();
+    return null;
   } finally {
     setButtonsDisabled(false);
   }
@@ -330,6 +334,7 @@ async function refreshStatus() {
       button.setAttribute("aria-selected", button.dataset.profile === data.profile.key);
     });
     const pageLabels = data.page_modes || {};
+    currentPageMode = data.page_mode || "feed";
     if (el.pageModeLabel && data.page_mode) {
       el.pageModeLabel.textContent = pageLabels[data.page_mode]
         ? `${pageLabels[data.page_mode]} 模式`
@@ -338,8 +343,14 @@ async function refreshStatus() {
     if (el.searchTermBar) {
       el.searchTermBar.classList.toggle("hidden", data.page_mode !== "search");
     }
-    if (el.searchTermInput && document.activeElement !== el.searchTermInput) {
-      el.searchTermInput.value = data.search_term || "";
+    const serverSearchTerm = data.search_term || "";
+    savedSearchTerm = serverSearchTerm;
+    if (
+      el.searchTermInput
+      && document.activeElement !== el.searchTermInput
+      && !searchTermDirty
+    ) {
+      el.searchTermInput.value = serverSearchTerm;
     }
     document.querySelectorAll("[data-page-mode]").forEach((button) => {
       const isActive = button.dataset.pageMode === data.page_mode;
@@ -410,18 +421,39 @@ document.querySelectorAll("[data-page-mode]").forEach((button) => {
   });
 });
 
-async function saveSearchTerm() {
+async function saveSearchTerm({ silent = false } = {}) {
   const term = el.searchTermInput?.value.trim() || "";
   if (!term) {
     showToast("请先输入搜索词");
     el.searchTermInput?.focus();
-    return;
+    return false;
   }
-  await runAction(`search_term:${term}`);
-  showToast(`搜索词：${term}`);
+  if (term === savedSearchTerm) {
+    searchTermDirty = false;
+    if (!silent) showToast(`搜索词保持：${term}`);
+    return true;
+  }
+  const result = await runAction(`search_term:${term}`);
+  if (!result?.ok) return false;
+  savedSearchTerm = term;
+  searchTermDirty = false;
+  if (!silent) showToast(`搜索词：${term}`);
+  return true;
 }
 
-el.searchTermButton?.addEventListener("click", saveSearchTerm);
+async function runCategoryAction(button) {
+  if (currentPageMode === "search") {
+    const ready = await saveSearchTerm({ silent: true });
+    if (!ready) return;
+  }
+  sfx.click();
+  await runAction(button.dataset.action);
+}
+
+el.searchTermButton?.addEventListener("click", () => saveSearchTerm());
+el.searchTermInput?.addEventListener("input", () => {
+  searchTermDirty = (el.searchTermInput?.value.trim() || "") !== savedSearchTerm;
+});
 el.searchTermInput?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -571,12 +603,11 @@ document.addEventListener("keydown", (e) => {
   const btn = document.querySelector(`.category-button[data-key="${key}"]`);
   if (btn && !btn.disabled) {
     e.preventDefault();
-    sfx.click();
     btn.classList.add("keypress-flash");
     btn.style.setProperty("--rx", "50%");
     btn.style.setProperty("--ry", "50%");
     setTimeout(() => btn.classList.remove("keypress-flash"), 250);
-    runAction(btn.dataset.action);
+    runCategoryAction(btn);
   }
 });
 
