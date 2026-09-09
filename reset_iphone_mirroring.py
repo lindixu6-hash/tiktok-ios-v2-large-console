@@ -1,9 +1,188 @@
 from __future__ import annotations
 
 import json
+import math
+import os
+import re
 import subprocess
+import tempfile
+import threading
 import time
 from pathlib import Path
+
+try:
+    import Quartz
+    from Quartz import (
+        CGWindowListCopyWindowInfo,
+        kCGWindowListOptionOnScreenOnly,
+        kCGNullWindowID,
+        NSWorkspace,
+        NSApplicationActivateIgnoringOtherApps,
+    )
+    QUARTZ_AVAILABLE = True
+except ImportError:
+    QUARTZ_AVAILABLE = False
+
+_FAST_EVENT_SOURCE = None
+
+def _get_event_source():
+    global _FAST_EVENT_SOURCE
+    if _FAST_EVENT_SOURCE is None and QUARTZ_AVAILABLE:
+        _FAST_EVENT_SOURCE = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
+    return _FAST_EVENT_SOURCE
+
+def fast_click(x: int, y: int, move_settle_ms: int = 15, hold_ms: int = 40) -> None:
+    src = _get_event_source()
+    pt = Quartz.CGPoint(x, y)
+    move = Quartz.CGEventCreateMouseEvent(src, Quartz.kCGEventMouseMoved, pt, 0)
+    if move:
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, move)
+    if move_settle_ms > 0:
+        time.sleep(move_settle_ms / 1000.0)
+    down = Quartz.CGEventCreateMouseEvent(src, Quartz.kCGEventLeftMouseDown, pt, 0)
+    if down:
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, down)
+    if hold_ms > 0:
+        time.sleep(hold_ms / 1000.0)
+    up = Quartz.CGEventCreateMouseEvent(src, Quartz.kCGEventLeftMouseUp, pt, 0)
+    if up:
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, up)
+
+def fast_flick(delta_y: int = -600, steps: int = 10, duration_ms: int = 120) -> None:
+    src = _get_event_source()
+    step_us = int(duration_ms * 1000 / steps)
+    for step in range(1, steps + 1):
+        t = step / steps
+        velocity = math.sin((1.0 - t) * math.pi / 2)
+        step_delta = int((delta_y / steps) * velocity * 2.0)
+        ev = Quartz.CGEventCreateScrollWheelEvent2(
+            src,
+            Quartz.kCGScrollEventUnitPixel,
+            1,
+            step_delta,
+            0,
+            0,
+        )
+        if ev:
+            Quartz.CGEventPost(Quartz.kCGHIDEventTap, ev)
+        if step < steps:
+            time.sleep(step_us / 1_000_000.0)
+
+def fast_swipe_next(delta_y: int = -600) -> None:
+    fast_flick(delta_y, steps=10, duration_ms=120)
+
+_TURBO_URL_RE = re.compile(r"https?://[^\s]+")
+
+def _extract_url(text: str) -> str:
+    m = _TURBO_URL_RE.search(text.strip())
+    if not m:
+        return ""
+    link = m.group(0).rstrip("。，,)")
+    # 截断查询参数：TikTok 分享长链在 video/<VID> 后带一堆追踪参数
+    # （u_code/region/mid/sec_user_id/utm/...），只保留干净路径；vt 短链无 ? 不受影响
+    link = link.split("?", 1)[0].rstrip("。，,)")
+    return link
+
+
+def read_iphone_clipboard_link() -> str:
+    if not QUARTZ_AVAILABLE:
+        return ""
+    try:
+        import Vision
+        from Foundation import NSURL
+    except ImportError:
+        return ""
+
+    config = load_config()
+    info = get_front_window_info_quartz(config)
+    if parse_window_info(info) is None:
+        return ""
+
+    source = _get_event_source()
+    for key_down in (True, False):
+        event = Quartz.CGEventCreateKeyboardEvent(source, 20, key_down)
+        Quartz.CGEventSetFlags(event, Quartz.kCGEventFlagMaskCommand)
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+        time.sleep(0.08)
+    time.sleep(0.8)
+
+    window_id = None
+    app_names = set(config.get("app_names", []))
+    for window in CGWindowListCopyWindowInfo(
+        kCGWindowListOptionOnScreenOnly,
+        kCGNullWindowID,
+    ):
+        if window.get("kCGWindowOwnerName") in app_names:
+            window_id = window.get("kCGWindowNumber")
+            break
+    if not window_id:
+        return ""
+
+    fd, image_path = tempfile.mkstemp(prefix="iphone_clipboard_", suffix=".png")
+    os.close(fd)
+    try:
+        capture = subprocess.run(
+            ["screencapture", "-x", "-l", str(window_id), image_path],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        if capture.returncode != 0:
+            return ""
+
+        request = Vision.VNRecognizeTextRequest.alloc().init()
+        request.setRecognitionLevel_(Vision.VNRequestTextRecognitionLevelAccurate)
+        request.setRecognitionLanguages_(["en-US"])
+        handler = Vision.VNImageRequestHandler.alloc().initWithURL_options_(
+            NSURL.fileURLWithPath_(image_path),
+            {},
+        )
+        ok, _ = handler.performRequests_error_([request], None)
+        if not ok:
+            return ""
+
+        text_lines = []
+        for observation in request.results() or []:
+            candidates = observation.topCandidates_(1)
+            if candidates:
+                text_lines.append(str(candidates[0].string()))
+        text = "\n".join(text_lines)
+        # 优先匹配 vt.tiktok.com 短链接（干净的分享链接）
+        short_match = re.search(
+            r"https?://vt\.tiktok\.com/[A-Za-z0-9]+/?",
+            text,
+            re.IGNORECASE,
+        )
+        if short_match:
+            return short_match.group(0)
+        # 回退：匹配其他 tiktok.com 链接但截断查询参数
+        match = re.search(
+            r"(?:(?:https?://)?(?:www\.|vt\.)?tiktok\.com/[^\s?&]+)",
+            text,
+            re.IGNORECASE,
+        )
+        if not match:
+            return ""
+        link = match.group(0).rstrip("。，,)")
+        return link if link.startswith(("http://", "https://")) else f"https://{link}"
+    finally:
+        try:
+            os.unlink(image_path)
+        except OSError:
+            pass
+        for key_down in (True, False):
+            event = Quartz.CGEventCreateKeyboardEvent(source, 53, key_down)
+            Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+            time.sleep(0.05)
+
+
+def is_share_transition(prev_x_ratio: float, cur_x_ratio: float, prev_y_ratio: float = 0.0, cur_y_ratio: float = 0.0) -> bool:
+    if prev_x_ratio > 0.7 and cur_x_ratio < 0.5:
+        return True
+    if prev_x_ratio > 0.7 and cur_x_ratio > 0.7 and 0.60 < prev_y_ratio < 0.76 and cur_y_ratio > 0.73 and cur_y_ratio > prev_y_ratio:
+        return True
+    return False
 
 
 ROOT = Path(__file__).resolve().parent
@@ -18,7 +197,20 @@ def load_config() -> dict:
 
 
 def save_config(config: dict) -> None:
-    CONFIG_PATH.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    data = json.dumps(config, ensure_ascii=False, indent=2) + "\n"
+    fd, tmp_path = tempfile.mkstemp(dir=str(CONFIG_PATH.parent), prefix=".config_", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, str(CONFIG_PATH))
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def get_window_config(config: dict, profile: str) -> dict:
@@ -130,11 +322,99 @@ def parse_window_info(result: str) -> tuple[str, int, int, int, int] | None:
     return app_name, x, y, width, height
 
 
+def _find_mirror_app(config: dict):
+    if not QUARTZ_AVAILABLE:
+        return None
+    ws = NSWorkspace.sharedWorkspace()
+    app_names = config.get("app_names", ["iPhone Mirroring"])
+    target_names = set(app_names)
+    target_names.add("iPhone镜像")
+    target_names.add("iPhone 镜像")
+    for app in ws.runningApplications():
+        name = app.localizedName()
+        if name and name in target_names:
+            return app
+    return None
+
+
+def get_front_window_info_quartz(config: dict, activate: bool = True) -> str:
+    if not QUARTZ_AVAILABLE:
+        return run_osascript(build_front_window_info_script(config) if activate else build_window_info_script(config))
+
+    app = _find_mirror_app(config)
+    if app is None:
+        return "NOT_FOUND"
+
+    app_name = app.localizedName()
+
+    if activate:
+        app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+        time.sleep(0.25)
+
+    window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
+    for w in window_list:
+        owner = w.get("kCGWindowOwnerName", "")
+        layer = w.get("kCGWindowLayer", 0)
+        if owner == app_name and layer == 0:
+            bounds = w.get("kCGWindowBounds", {})
+            x = int(bounds.get("X", 0))
+            y = int(bounds.get("Y", 0))
+            width = int(bounds.get("Width", 0))
+            height = int(bounds.get("Height", 0))
+            if width > 0 and height > 0:
+                return f"INFO:{app_name}:{x},{y},{width},{height}"
+    return f"NO_WINDOW:{app_name}"
+
+
 def run_click(x: int, y: int) -> str:
     if not CLICKER_PATH.exists():
         return "ERROR:mac_click 不存在，请先编译 Swift 点击器"
     completed = subprocess.run(
         [str(CLICKER_PATH), str(x), str(y)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        message = completed.stderr.strip() or completed.stdout.strip()
+        return f"ERROR:{message}"
+    return completed.stdout.strip()
+
+
+def run_drag(
+    start_x: int,
+    start_y: int,
+    end_x: int,
+    end_y: int,
+    duration_seconds: float = 0.32,
+) -> str:
+    if not CLICKER_PATH.exists():
+        return "ERROR:mac_click 不存在，请先编译 Swift 点击器"
+    completed = subprocess.run(
+        [
+            str(CLICKER_PATH),
+            "drag",
+            str(start_x),
+            str(start_y),
+            str(end_x),
+            str(end_y),
+            str(duration_seconds),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        message = completed.stderr.strip() or completed.stdout.strip()
+        return f"ERROR:{message}"
+    return completed.stdout.strip()
+
+
+def run_flick(delta_y: float, steps: int = 12, duration_ms: int = 140) -> str:
+    if not CLICKER_PATH.exists():
+        return "ERROR:mac_click 不存在，请先编译 Swift 点击器"
+    completed = subprocess.run(
+        [str(CLICKER_PATH), "flick", str(delta_y), str(steps), str(duration_ms)],
         check=False,
         capture_output=True,
         text=True,
@@ -194,14 +474,46 @@ def reset_window(profile: str = "main") -> str:
 
 
 def get_window_info() -> str:
-    return run_osascript(build_window_info_script(load_config()))
+    return get_front_window_info_quartz(load_config(), activate=False)
+
+
+def run_scroll(delta_y: int) -> str:
+    if not CLICKER_PATH.exists():
+        return "ERROR:mac_click 不存在，请先编译 Swift 点击器"
+    completed = subprocess.run(
+        [str(CLICKER_PATH), "scroll", str(delta_y)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        message = completed.stderr.strip() or completed.stdout.strip()
+        return f"ERROR:{message}"
+    return completed.stdout.strip()
+
+
+def swipe_to_next_video() -> str:
+    config = load_config()
+    swipe = config.get("macros", {}).get("next_video_swipe", {})
+
+    settle_delay = float(swipe.get("settle_delay_seconds", 0.12))
+    time.sleep(settle_delay)
+
+    delta_y = float(swipe.get("scroll_delta_y", -600))
+    steps = int(swipe.get("scroll_steps", 12))
+    duration_ms = int(swipe.get("scroll_duration_ms", 140))
+
+    result = run_flick(delta_y, steps, duration_ms)
+    if not result.startswith("OK:"):
+        return result
+    return f"OK:next_video:scroll:{int(delta_y)}"
 
 
 def save_current_window_profile(profile: str) -> str:
     if profile not in {"main", "external"}:
         return f"ERROR:未知窗口位置 {profile}"
     config = load_config()
-    info = run_osascript(build_front_window_info_script(config))
+    info = get_front_window_info_quartz(config)
     parsed = parse_window_info(info)
     if parsed is None:
         return info
@@ -239,7 +551,7 @@ def launch_mirroring() -> str:
 def run_login_connect_macro() -> str:
     config = load_config()
     macro = config["macros"]["icloud_login_connect"]
-    info = run_osascript(build_front_window_info_script(config))
+    info = get_front_window_info_quartz(config)
     parsed = parse_window_info(info)
     if parsed is None:
         return info
@@ -274,7 +586,7 @@ def parse_recording(output: str) -> list[tuple[int, int, int]]:
 
 def record_macro(macro_name: str, timeout_seconds: float = 30.0) -> str:
     config = load_config()
-    info = run_osascript(build_front_window_info_script(config))
+    info = get_front_window_info_quartz(config)
     parsed = parse_window_info(info)
     if parsed is None:
         return info
@@ -318,10 +630,10 @@ def record_macro(macro_name: str, timeout_seconds: float = 30.0) -> str:
 
 def compressed_macro_delay(index: int, total: int) -> float:
     if index == 0:
-        return 0.08
+        return 0.03
     if index == total - 1:
-        return 0.48
-    return 0.14
+        return 0.15
+    return 0.05
 
 
 def play_recorded_macro(macro_name: str | None = None, fast: bool = False) -> str:
@@ -333,7 +645,7 @@ def play_recorded_macro(macro_name: str | None = None, fast: bool = False) -> st
     if not macro:
         return f"ERROR:没有找到录制宏 {target_macro}"
 
-    info = run_osascript(build_front_window_info_script(config))
+    info = get_front_window_info_quartz(config)
     parsed = parse_window_info(info)
     if parsed is None:
         return info
@@ -343,17 +655,147 @@ def play_recorded_macro(macro_name: str | None = None, fast: bool = False) -> st
     if not actions:
         return f"ERROR:录制宏 {target_macro} 没有动作"
 
+    MIN_SHARE_SHEET_DELAY = 0.4
+
+    prev_x_ratio = 1.0
+    prev_y_ratio = 1.0
     for index, action in enumerate(actions):
+        delay = float(action.get("delay_seconds", 0))
+        cur_x_ratio = float(action["x_ratio"])
+        cur_y_ratio = float(action["y_ratio"])
         if fast:
-            time.sleep(compressed_macro_delay(index, len(actions)))
-        else:
-            time.sleep(float(action.get("delay_seconds", 0)))
-        x = int(left_x + width * float(action["x_ratio"]))
-        y = int(top_y + height * float(action["y_ratio"]))
+            delay = compressed_macro_delay(index, len(actions))
+        if index > 0 and is_share_transition(prev_x_ratio, cur_x_ratio, prev_y_ratio, cur_y_ratio):
+            delay = max(delay, MIN_SHARE_SHEET_DELAY)
+        time.sleep(delay)
+        x = int(left_x + width * cur_x_ratio)
+        y = int(top_y + height * cur_y_ratio)
         result = run_click(x, y)
         if not result.startswith("OK:"):
             return result
+        prev_x_ratio = cur_x_ratio
+        prev_y_ratio = cur_y_ratio
     return f"OK:{app_name}:{target_macro}:played={len(actions)}"
+
+
+def turbo_play_macro(macro_name: str) -> str:
+    if not QUARTZ_AVAILABLE:
+        return play_recorded_macro(macro_name, fast=True)
+
+    config = load_config()
+    target_macro = macro_name or config.get("last_recorded_macro")
+    if not target_macro:
+        return "ERROR:还没有最近录制宏"
+    macro = config.get("recorded_macros", {}).get(target_macro)
+    if not macro:
+        return f"ERROR:没有找到录制宏 {target_macro}"
+
+    info = get_front_window_info_quartz(config, activate=False)
+    parsed = parse_window_info(info)
+    if parsed is None:
+        info2 = get_front_window_info_quartz(config, activate=True)
+        parsed = parse_window_info(info2)
+        if parsed is None:
+            return info2
+
+    app_name, left_x, top_y, width, height = parsed
+    actions = macro.get("actions", [])
+    if not actions:
+        return f"ERROR:录制宏 {target_macro} 没有动作"
+
+    INSTANT_DELAY = 0.035
+    SHARE_SHEET_DELAY = 0.450
+
+    prev_x_ratio = 1.0
+    prev_y_ratio = 1.0
+    for index, action in enumerate(actions):
+        x_ratio = float(action["x_ratio"])
+        y_ratio = float(action["y_ratio"])
+        if is_share_transition(prev_x_ratio, x_ratio, prev_y_ratio, y_ratio):
+            time.sleep(SHARE_SHEET_DELAY)
+        elif index > 0:
+            time.sleep(INSTANT_DELAY)
+        x = int(left_x + width * x_ratio)
+        y = int(top_y + height * y_ratio)
+        fast_click(x, y, move_settle_ms=12, hold_ms=35)
+        prev_x_ratio = x_ratio
+        prev_y_ratio = y_ratio
+
+    return f"OK:{app_name}:{target_macro}:turbo={len(actions)}"
+
+
+def _wait_for_new_link(previous_link: str, timeout: float = 1.5) -> tuple[str, bool]:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            cb = subprocess.run(["pbpaste"], capture_output=True, text=True, timeout=0.1)
+            url = _extract_url(cb.stdout)
+            if url and url != previous_link and len(url) > 10:
+                return url, True
+        except Exception:
+            pass
+        time.sleep(0.02)
+    return "", False
+
+
+def turbo_play_macro_and_get_link(macro_name: str, previous_link: str = "", swipe_delta_y: int = -600) -> dict:
+    if not QUARTZ_AVAILABLE:
+        return {"error": "Quartz not available"}
+
+    config = load_config()
+    target_macro = macro_name or config.get("last_recorded_macro")
+    if not target_macro:
+        return {"error": "还没有最近录制宏"}
+    macro = config.get("recorded_macros", {}).get(target_macro)
+    if not macro:
+        return {"error": f"没有找到录制宏 {target_macro}"}
+
+    info = get_front_window_info_quartz(config, activate=False)
+    parsed = parse_window_info(info)
+    if parsed is None:
+        info = get_front_window_info_quartz(config, activate=True)
+        parsed = parse_window_info(info)
+        if parsed is None:
+            return {"error": info}
+
+    app_name, left_x, top_y, width, height = parsed
+    actions = macro.get("actions", [])
+    if not actions:
+        return {"error": f"录制宏 {target_macro} 没有动作"}
+
+    INSTANT_DELAY = 0.035
+    SHARE_SHEET_DELAY = 0.450
+    prev_x_ratio = 1.0
+    prev_y_ratio = 1.0
+
+    for index, action in enumerate(actions):
+        x_ratio = float(action["x_ratio"])
+        y_ratio = float(action["y_ratio"])
+        is_last = index == len(actions) - 1
+        if is_share_transition(prev_x_ratio, x_ratio, prev_y_ratio, y_ratio):
+            time.sleep(SHARE_SHEET_DELAY)
+        elif index > 0:
+            time.sleep(INSTANT_DELAY)
+        x = int(left_x + width * x_ratio)
+        y = int(top_y + height * y_ratio)
+        if is_last:
+            fast_click(x, y, move_settle_ms=15, hold_ms=50)
+            link, found = _wait_for_new_link(previous_link, timeout=1.5)
+            fast_swipe_next(swipe_delta_y)
+            return {
+                "ok": True,
+                "app_name": app_name,
+                "macro": target_macro,
+                "clicks": len(actions),
+                "link": link,
+                "link_found": found,
+            }
+        else:
+            fast_click(x, y, move_settle_ms=12, hold_ms=35)
+        prev_x_ratio = x_ratio
+        prev_y_ratio = y_ratio
+
+    return {"error": "no actions played"}
 
 
 def calibrate_login_connect_point(point_name: str, delay_seconds: float = 3.0) -> str:
@@ -361,7 +803,7 @@ def calibrate_login_connect_point(point_name: str, delay_seconds: float = 3.0) -
         return f"ERROR:未知校准点 {point_name}"
 
     config = load_config()
-    info = run_osascript(build_front_window_info_script(config))
+    info = get_front_window_info_quartz(config)
     parsed = parse_window_info(info)
     if parsed is None:
         return info

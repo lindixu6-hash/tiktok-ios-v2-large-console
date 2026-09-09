@@ -3,116 +3,169 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>iOS V2 大屏版</title>
+    <title>TikTok 养号控制台</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="hero">
-        <div class="cat-card">
-          <img id="catImage" src="/cat.png" alt="cat" onerror="this.style.display='none'; this.parentElement.classList.add('missing')" />
+    <main class="app">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-dot"></div>
+          <h1 id="consoleTitle">养号控制台</h1>
         </div>
-        <div>
-          <p class="eyebrow" id="consoleEyebrow">iOS V2</p>
-          <h1 id="consoleTitle">大屏版</h1>
-          <p class="sub" id="consoleSubtitle">录制、复位、播放都在一个柔软的小面板里。</p>
+        <div class="header-actions">
+          <span id="globalKeyBadge" class="global-key-badge" title="全局快捷键状态">
+            <span class="gk-dot"></span>
+            <span class="gk-text">全局键</span>
+          </span>
+          <span id="busyPill" class="status-pill idle">空闲</span>
+          <button id="miniBtn" class="icon-btn" title="悬浮小窗">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="control-bar" id="controlBar">
+        <button id="startBtn" class="control-btn start-btn" data-action="start">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 19,12 8,19"/></svg>
+          <span>开始养号</span>
+        </button>
+        <button id="pauseBtn" class="control-btn pause-btn hidden" data-action="pause">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span>暂停</span>
+        </button>
+        <span id="controlStatus" class="control-status">点击「开始养号」启动</span>
+      </section>
+
+      <section id="permBanner" class="perm-banner hidden">
+        <div class="perm-head">
+          <span class="perm-icon">!</span>
+          <strong id="permTitle">权限问题</strong>
+          <button id="permFixBtn" class="btn-sm primary">修复</button>
+          <button id="permCloseBtn" class="btn-sm ghost">×</button>
+        </div>
+        <ul id="permList" class="perm-list"></ul>
+      </section>
+
+      <section class="domain-bar">
+        <span class="mode-label">领域</span>
+        <div class="segmented domain-seg" id="domainSwitch" role="tablist">
+          <button class="seg-btn" data-domain="minor" role="tab">Minor</button>
+          <button class="seg-btn" data-domain="ansa" role="tab">ANSA</button>
+          <button class="seg-btn active" data-domain="ssh" role="tab">SSH</button>
         </div>
       </section>
 
-      <section class="status-grid">
-        <article class="status-card primary">
-          <span class="label">录制状态</span>
-          <strong id="recording">加载中...</strong>
-        </article>
-        <article class="status-card">
-          <div class="status-head">
-            <span class="label">普通状态</span>
-            <button id="statusDetailButton" class="detail-button" type="button">详情</button>
+      <section class="mode-bar">
+        <div class="mode-group">
+          <span class="mode-label">页面</span>
+          <div class="segmented" role="tablist">
+            <button class="seg-btn active" data-page-mode="feed" role="tab" aria-selected="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+              Feed
+            </button>
+            <button class="seg-btn" data-page-mode="search" role="tab" aria-selected="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              搜索
+            </button>
           </div>
-          <strong id="status" class="status-text">加载中...</strong>
-        </article>
+        </div>
+        <div class="mode-group">
+          <span class="mode-label">版本</span>
+          <div class="segmented">
+            <button class="seg-btn active" data-profile="stable">标准</button>
+            <button class="seg-btn" data-profile="repost">转发</button>
+          </div>
+        </div>
       </section>
 
-      <section class="macro-strip" id="macroStrip"></section>
-      <section class="sheet-row">
-        <span>当前写入行</span>
-        <input id="rowInput" type="number" min="1" value="2440" />
-        <button id="rowButton" type="button">跳到此行</button>
-      </section>
+      <section class="macro-chips" id="macroStrip"></section>
 
-      <section class="panel category-panel">
-        <div class="panel-title">
-          <span>主点击按钮</span>
-          <em>0-6 分类写入</em>
+      <section class="category-section">
+        <div class="section-head">
+          <span class="section-title">分类快捷键</span>
+          <span class="section-hint" id="pageModeLabel">Feed 模式</span>
         </div>
         <div class="category-grid" id="categoryButtons"></div>
       </section>
 
-      <section class="panel profile-panel">
-        <div class="panel-title">
-          <span>当前版本</span>
-          <em id="busyPill">空闲</em>
+      <section class="row-bar">
+        <label class="row-label">当前行</label>
+        <input id="rowInput" type="number" min="1" value="2" class="row-input" />
+        <button id="rowButton" class="btn-sm">跳转</button>
+      </section>
+
+      <section class="status-card">
+        <div class="status-row">
+          <span class="status-key">录制</span>
+          <span id="recording" class="status-val muted">加载中...</span>
         </div>
-        <div class="profile-switch">
-          <button data-profile="stable">日常分享版</button>
-          <button data-profile="repost">转发版</button>
+        <div class="status-row">
+          <span class="status-key">状态</span>
+          <span id="status" class="status-val">准备就绪</span>
+          <button id="statusDetailButton" class="btn-xs">详情</button>
         </div>
       </section>
 
-      <details class="panel play-panel">
+      <details class="collapsible">
         <summary>
-          <span>播放宏</span>
-          <em>保留旧 V2 能力</em>
+          <span>录制宏</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
-        <div class="button-grid three" id="playButtons"></div>
-      </details>
-
-      <details class="panel">
-        <summary>
-          <span>常用操作</span>
-          <em>复位 / 坐标 / 测试</em>
-        </summary>
-        <div class="button-grid two">
-          <button data-action="launch">启动 iPhone 镜像</button>
-          <button data-action="read_coords">读取坐标</button>
-          <button data-action="reset_main">复位到主屏</button>
-          <button data-action="reset_external">复位到外接屏</button>
-          <button data-action="save_main_window">保存为主屏位</button>
-          <button data-action="save_external_window">保存为外接屏位</button>
-          <button data-action="test_login">测试登录 + 连接</button>
-          <button data-action="play_recent">播放最近录制宏</button>
+        <div class="collapsible-body">
+          <div class="record-group">
+            <div class="record-group-title">📱 Feed 流</div>
+            <div class="record-grid" id="recordFeedGrid"></div>
+          </div>
+          <div class="record-group">
+            <div class="record-group-title">🔍 搜索页</div>
+            <div class="record-grid" id="recordSearchGrid"></div>
+          </div>
+          <button class="btn-danger" data-action="stop_recording">结束录制</button>
         </div>
       </details>
 
-      <details class="panel recorder">
+      <details class="collapsible">
         <summary>
-          <span>录制宏</span>
-          <em>需要重录时展开</em>
+          <span>工具</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
-        <div class="button-grid three" id="recordButtons"></div>
-        <button class="danger" data-action="stop_recording">结束录制并保存</button>
-      </details>
-
-      <details class="panel">
-        <summary>
-          <span>临时校准</span>
-          <em>测试登录页用</em>
-        </summary>
-        <div class="button-grid two">
-          <button data-action="calibrate_login">校准登录点</button>
-          <button data-action="calibrate_connect">校准连接点</button>
+        <div class="collapsible-body">
+          <div class="tool-grid">
+            <button class="tool-btn" data-action="launch">启动镜像</button>
+            <button class="tool-btn" data-action="read_coords">读取坐标</button>
+            <button class="tool-btn" data-action="reset_main">复位主屏</button>
+            <button class="tool-btn" data-action="reset_external">复位外接</button>
+            <button class="tool-btn" data-action="save_main_window">保存主屏位</button>
+            <button class="tool-btn" data-action="save_external_window">保存外接位</button>
+            <button class="tool-btn" data-action="play_recent">播放最近宏</button>
+            <button class="tool-btn" id="statsBtn">统计密度</button>
+          </div>
         </div>
       </details>
     </main>
-    <div id="statusModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+
+    <div id="statusModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="modal-card">
-        <div class="modal-title">
-          <span id="statusModalTitle">状态详情</span>
-          <button id="statusModalClose" class="detail-button" type="button">关闭</button>
+        <div class="modal-head">
+          <span>状态详情</span>
+          <button id="statusModalClose" class="btn-sm ghost">关闭</button>
         </div>
-        <pre id="statusDetail">加载中...</pre>
+        <pre id="statusDetail" class="modal-body"></pre>
       </div>
     </div>
+
+    <div id="statsModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <span>📊 养号密度</span>
+          <button id="statsModalClose" class="btn-sm ghost">关闭</button>
+        </div>
+        <div id="statsContent" class="modal-body"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
     <script src="/app.js"></script>
   </body>
 </html>

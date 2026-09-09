@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import webbrowser
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -93,7 +95,16 @@ def ensure_sheet_config() -> tuple[str, str]:
         sheet["sheet_id"] = sheet_id
         sheet["start_row"] = int(sheet.get("start_row") or current_row)
         sheet["current_row"] = current_row
-        CONFIG_PATH.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        data = json.dumps(config, ensure_ascii=False, indent=2) + "\n"
+        fd, tmp = tempfile.mkstemp(dir=str(CONFIG_PATH.parent), prefix=".config_", suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(data); f.flush(); os.fsync(f.fileno())
+            os.replace(tmp, str(CONFIG_PATH))
+        except Exception:
+            try: os.unlink(tmp)
+            except OSError: pass
+            raise
         print("[OK] 已生成本机 config.json。这个文件不会提交到 GitHub。")
 
     if is_missing(token) or is_missing(sheet_id):

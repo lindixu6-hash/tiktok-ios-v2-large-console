@@ -1,7 +1,26 @@
+# 配置与密钥（含飞书 token、账号、宏坐标），切勿提交
 config.json
+.config_*.tmp
+*.pid
+.hotkey.pid
+
+# 日志
+*.log
+console.log
+hotkey.log
+
+# 编译产物 / 二进制
+mac_click
+mac_record
 __pycache__/
 *.pyc
 .DS_Store
-mac_click
-mac_record
-*.log
+
+# 临时视频/图片（拉片产物）
+*.mp4
+*.jpg
+*.jpeg
+*.png
+!web/*.png
+!cat.png
+!cat-repost.png

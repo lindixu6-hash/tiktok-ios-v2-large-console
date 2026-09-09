@@ -26,6 +26,18 @@
     "iPhoneミラーリング"
   ],
   "macros": {
+    "next_video_swipe": {
+      "tap_x_ratio": 0.5,
+      "tap_y_ratio": 0.45,
+      "start_x_ratio": 0.5,
+      "start_y_ratio": 0.78,
+      "end_x_ratio": 0.5,
+      "end_y_ratio": 0.18,
+      "duration_seconds": 0.12,
+      "settle_delay_seconds": 0.6,
+      "tap_delay_seconds": 0.25,
+      "pre_swipe_delay_seconds": 0.15
+    },
     "icloud_login_connect": {
       "delay_seconds": 0.5,
       "login": {

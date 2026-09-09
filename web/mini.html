@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini</title>
+  <link rel="stylesheet" href="/mini.css">
+</head>
+<body>
+  <div id="miniWindow">
+    <div id="header">
+      <span id="statusDot" class="dot idle"></span>
+      <span id="statusText">空闲</span>
+      <button id="openMainBtn" title="打开主控制台">◧</button>
+    </div>
+    <div id="buttonArea">
+      <!-- 分类按钮由 mini.js 按当前领域动态渲染 -->
+    </div>
+    <div id="toast"></div>
+  </div>
+  <script src="/mini.js"></script>
+</body>
+</html>
