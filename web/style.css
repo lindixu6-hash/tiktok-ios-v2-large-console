@@ -488,37 +488,6 @@ body {
   transform: scale(0.95);
 }
 
-/* Macro Chips */
-.macro-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.chip {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  color: var(--text-tertiary);
-  transition: all 0.25s var(--ease-out);
-  letter-spacing: 0.01em;
-}
-
-.chip.done {
-  color: var(--text-secondary);
-  border-color: var(--border);
-}
-
-.chip.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(232, 149, 106, 0.3);
-}
-
 /* Category Section */
 .section-head {
   display: flex;

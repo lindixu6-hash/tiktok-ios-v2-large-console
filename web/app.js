@@ -29,7 +29,6 @@ const el = {
   statusModal: document.querySelector("#statusModal"),
   statusModalClose: document.querySelector("#statusModalClose"),
   consoleTitle: document.querySelector("#consoleTitle"),
-  macroStrip: document.querySelector("#macroStrip"),
   busyPill: document.querySelector("#busyPill"),
   categoryButtons: document.querySelector("#categoryButtons"),
   recordFeedGrid: document.querySelector("#recordFeedGrid"),
@@ -295,20 +294,6 @@ function setButtonsDisabled(disabled) {
   });
 }
 
-/* ─── Render Macros ─── */
-function renderMacros(macros) {
-  el.macroStrip.innerHTML = "";
-  macros.forEach((macro) => {
-    const chip = document.createElement("span");
-    chip.className = `chip ${macro.recorded ? "done" : ""} ${macro.active ? "active" : ""}`;
-    const prefix = macro.page === "feed" ? "📱" : "🔍";
-    chip.textContent = macro.recorded
-      ? `${prefix} ${macro.short_label} · ${macro.count}点`
-      : `${prefix} ${macro.short_label} · 未录`;
-    el.macroStrip.appendChild(chip);
-  });
-}
-
 function summarizeStatus(status) {
   if (!status) return "";
   const withoutLink = status.replace(/；链接=.*/, "");
@@ -344,7 +329,6 @@ async function refreshStatus() {
     el.busyPill.classList.toggle("busy", data.busy);
     el.busyPill.classList.toggle("paused", data.paused && !data.busy);
     el.busyPill.classList.toggle("running", !data.paused && !data.busy);
-    renderMacros(data.macros);
     if (document.activeElement !== el.rowInput) {
       el.rowInput.value = data.sheet.current_row;
     }
